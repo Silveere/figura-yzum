@@ -624,7 +624,6 @@ function player_init()
 	end
 	setLocalState()
 	syncState()
-	print(PartsManager.evaluatePart(model.Body_Tail))
 end
 
 anim_tick=0
