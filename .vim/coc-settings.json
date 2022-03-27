@@ -1,0 +1,36 @@
+{
+	"Lua": {
+		"diagnostics": {
+			"globals":[
+				"vanilla_model",
+				"armor_model",
+				"elytra_model",
+				"held_item_model",
+				"spyglass_model",
+				"parrot_model",
+				"first_person_model",
+				"model",
+				"particle",
+				"sound",
+				"player",
+				"world",
+				"vectors",
+				"animation",
+				"ping",
+				"action_wheel",
+				"keybind",
+				"nameplate",
+				"camera",
+				"chat",
+				"meta",
+				"renderer",
+				"log",
+				"data"
+
+			],
+			"disable":[
+				"lowercase-global"
+			]
+		}
+	}
+}
