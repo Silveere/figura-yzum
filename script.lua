@@ -651,7 +651,7 @@ function tick()
 		refreshed=true
 	end
 
-	if world.getTime() % 20*10 then
+	if world.getTime() % (20*10) == 0 then
 		syncState()
 	end
 	animateTick()
