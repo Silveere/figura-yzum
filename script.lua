@@ -498,7 +498,7 @@ for _, v in pairs(VANILLA_GROUPS.OUTER) do table.insert(VANILLA_GROUPS.ALL,v) en
 for _, v in pairs(armor_model) do table.insert(VANILLA_GROUPS.ARMOR, v) end
 
 MAIN_GROUPS={model.Head, model.RightArm, model.LeftArm, model.RightLeg, model.LeftLeg, model.Body } -- RightArm LeftArm RightLeg LeftLeg Body Head
-TAIL_BONES={model.Body_Tail, model.Body_Tail.Body_Tail2, model.Body_Tail.Body_Tail2.Body_Tail3, model.Body_Tail.Body_Tail2.Body_Tail3.Body_Tail4}
+TAIL_BONES={model.Body_Tail, model.Body_Tail.Tail2, model.Body_Tail.Tail2.Tail3, model.Body_Tail.Tail2.Tail3.Tail4}
 
 TAIL_ROT={vectors.of{37.5, 0, 0}, vectors.of{-17.5, 0, 0}, vectors.of{-17.5, 0, 0}, vectors.of{-15, 0, 0}}
 -- }}}
