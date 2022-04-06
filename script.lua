@@ -269,8 +269,18 @@ function syncState()
 	ping.syncState(setLocalState())
 end
 
-function pmRefresh()
-	rateLimit(1, PartsManager.refreshAll, "refreshAll")
+do
+	local pm_refresh=false
+	function pmRefresh()
+		pm_refresh=true
+	end
+
+	function doPmRefresh()
+		if pm_refresh then
+			PartsManager.refreshAll()
+			pm_refresh=false
+		end
+	end
 end
 
 function ping.syncState(tbl)
@@ -645,16 +655,12 @@ function animateTail(val)
 end
 
 function tick()
-	if not refreshed then
-		cooldown(1, "refreshAll")
-		PartsManager.refreshAll()
-		refreshed=true
-	end
-
 	if world.getTime() % (20*10) == 0 then
 		syncState()
 	end
 	animateTick()
+
+	doPmRefresh()
 end
 
 function render(delta)
