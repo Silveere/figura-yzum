@@ -5,11 +5,15 @@
 TEXTURE_WIDTH = 128
 TEXTURE_HEIGHT = 128
 
-PartsManager = require("nulllib.PartsManager")
-nmath = require("nulllib.math")
-nmath
-lerp=math.lerp
+PartsManager=require("nulllib.PartsManager")
+UVManager=require("nulllib.UVManager")
+logging=require("nulllib.logging")
+nmath=require("nulllib.math")
+timers=require("nulllib.timers")
+util=require("nulllib.util")
+
 wave=nmath.wave
+lerp=math.lerp
 
 -- syncState {{{
 function syncState()
