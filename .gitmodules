@@ -1,0 +1,3 @@
+[submodule "nulllib"]
+	path = nulllib
+	url = https://gitea.protogen.io/nullbite/nulllib-lua
