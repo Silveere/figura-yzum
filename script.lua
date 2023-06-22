@@ -1,6 +1,16 @@
 -- vim: set foldmethod=marker ts=4 sw=4 :
 -- from figura-protogen commit f3687a4
 --- Initial definitions ---
+-- rewrite compat
+model=models.player_model
+armor_model={
+	["BOOTS"]=vanilla_model.BOOTS,
+	["LEGGINGS"]=vanilla_model.LEGGINGS,
+	["CHESTPLATE"]=vanilla_model.CHESTPLATE,
+	["HELMET"]=vanilla_model.HELMET
+}
+ping=pings
+
 -- Texture dimensions --
 TEXTURE_WIDTH = 128
 TEXTURE_HEIGHT = 128
@@ -15,32 +25,32 @@ util=require("nulllib.util")
 wave=nmath.wave
 lerp=math.lerp
 
--- syncState {{{
-function syncState()
-	ping.syncState(setLocalState())
-end
-
-do
-	local pm_refresh=false
-	function pmRefresh()
-		pm_refresh=true
-	end
-
-	function doPmRefresh()
-		if pm_refresh then
-			PartsManager.refreshAll()
-			pm_refresh=false
-		end
-	end
-end
-
-function ping.syncState(tbl)
-	for k, v in pairs(tbl) do
-		local_state[k]=v
-	end
-	pmRefresh()
-end
--- }}}
+-- -- syncState {{{
+-- function syncState()
+-- 	ping.syncState(setLocalState())
+-- end
+-- 
+-- do
+-- 	local pm_refresh=false
+-- 	function pmRefresh()
+-- 		pm_refresh=true
+-- 	end
+-- 
+-- 	function doPmRefresh()
+-- 		if pm_refresh then
+-- 			PartsManager.refreshAll()
+-- 			pm_refresh=false
+-- 		end
+-- 	end
+-- end
+-- 
+-- function ping.syncState(tbl)
+-- 	for k, v in pairs(tbl) do
+-- 		local_state[k]=v
+-- 	end
+-- 	pmRefresh()
+-- end
+-- -- }}}
 
 -- Master and local state variables -- {{{
 -- Local State (these are copied by pings at runtime) --
@@ -48,7 +58,7 @@ local_state={}
 old_state={}
 -- master state variables and configuration (do not access within pings) --
 do
-	local is_host=client.isHost()
+	local is_host=host:isHost()
 	local defaults={
 		["armor_enabled"]=true,
 		["vanilla_enabled"]=false,
@@ -68,7 +78,10 @@ do
 		end
 		return local_state
 	end
-	if is_host then
+
+	-- TODO reimplement with new data API
+	-- if is_host then
+	if false then
 		local savedData=data.loadAll()
 		if savedData == nil then
 			for k, v in pairs(defaults) do
@@ -127,7 +140,7 @@ for _, v in pairs(armor_model) do table.insert(VANILLA_GROUPS.ARMOR, v) end
 MAIN_GROUPS={model.Head, model.RightArm, model.LeftArm, model.RightLeg, model.LeftLeg, model.Body } -- RightArm LeftArm RightLeg LeftLeg Body Head
 TAIL_BONES={model.Body_Tail, model.Body_Tail.Tail2, model.Body_Tail.Tail2.Tail3, model.Body_Tail.Tail2.Tail3.Tail4}
 
-TAIL_ROT={vectors.of{37.5, 0, 0}, vectors.of{-17.5, 0, 0}, vectors.of{-17.5, 0, 0}, vectors.of{-15, 0, 0}}
+TAIL_ROT={vec( 37.5, 0, 0 ), vec( -17.5, 0, 0 ), vec( -17.5, 0, 0 ), vec( -15, 0, 0 )}
 -- }}}
 
 -- -- Enable commands -- {{{
@@ -193,7 +206,7 @@ TAIL_ROT={vectors.of{37.5, 0, 0}, vectors.of{-17.5, 0, 0}, vectors.of{-17.5, 0, 
 
 -- PartsManager Rules {{{
 do
-	local can_modify_vanilla=meta.getCanModifyVanilla()
+	local can_modify_vanilla=avatar:canEditVanillaModel()
 	local function forceVanilla()
 		return not can_modify_vanilla or local_state.vanilla_enabled
 	end
@@ -246,11 +259,20 @@ end
 -- }}}
 
 function player_init()
-	for k, v in pairs(reduce(mergeTable, map(recurseModelGroup, model))) do
-		v.setEnabled(true)
-	end
+	-- for k, v in pairs(reduce(mergeTable, map(recurseModelGroup, model))) do
+	-- 	v.setEnabled(true)
+	-- end
 	setLocalState()
-	syncState()
+	-- syncState()
+	events.ENTITY_INIT:remove("player_init")
+end
+
+events.ENTITY_INIT:register(function() return player_init() end, "player_init")
+
+if avatar:canEditVanillaModel() then
+	vanilla_model.PLAYER:setVisible(false)
+else
+	model:setVisible(false)
 end
 
 anim_tick=0
@@ -267,19 +289,23 @@ function animateTail(val)
 	local per_x=20*6
 	for k, v in pairs(TAIL_BONES) do
 		local cascade=(k-1)*12
-		TAIL_BONES[k].setRot(vectors.of{TAIL_ROT[k].x + wave(val-cascade, per_x, 3), TAIL_ROT[k].y + wave(val-cascade, per_y, 17.5), TAIL_ROT[k].z})
+		TAIL_BONES[k]:setRot(vec( TAIL_ROT[k].x + wave(val-cascade, per_x, 3), TAIL_ROT[k].y + wave(val-cascade, per_y, 17.5), TAIL_ROT[k].z ))
 	end
 end
 
 function tick()
 	if world.getTime() % (20*10) == 0 then
-		syncState()
+		-- TODO fix
+		-- syncState()
 	end
 	animateTick()
 
-	doPmRefresh()
+	-- TODO fix
+	-- doPmRefresh()
 end
+events.TICK:register(function() if player then tick() end end, "main_tick")
 
 function render(delta)
 	animateTail(lerp(old_state.anim_cycle, anim_cycle, delta))
 end
+events.RENDER:register(function(delta) if player then render(delta) end end, "main_render")
