@@ -21,36 +21,11 @@ logging=require("nulllib.logging")
 nmath=require("nulllib.math")
 timers=require("nulllib.timers")
 util=require("nulllib.util")
+sharedstate=require("nulllib.sharedstate")
+sharedconfig=require("nulllib.sharedconfig")
 
 wave=nmath.wave
 lerp=math.lerp
-
--- -- syncState {{{
--- function syncState()
--- 	ping.syncState(setLocalState())
--- end
--- 
--- do
--- 	local pm_refresh=false
--- 	function pmRefresh()
--- 		pm_refresh=true
--- 	end
--- 
--- 	function doPmRefresh()
--- 		if pm_refresh then
--- 			PartsManager.refreshAll()
--- 			pm_refresh=false
--- 		end
--- 	end
--- end
--- 
--- function ping.syncState(tbl)
--- 	for k, v in pairs(tbl) do
--- 		local_state[k]=v
--- 	end
--- 	pmRefresh()
--- end
--- -- }}}
 
 -- Master and local state variables -- {{{
 -- Local State (these are copied by pings at runtime) --
@@ -66,55 +41,14 @@ do
 		["print_settings"]=false,
 		["tail_enabled"]=true,
 	}
-	function setLocalState()
-		if is_host then
-			for k, v in pairs(skin_state) do
-				local_state[k]=v
-			end
-		else
-			for k, v in pairs(defaults) do
-				if local_state[k] == nil then local_state[k]=v end
-			end
-		end
-		return local_state
-	end
-
-	-- TODO reimplement with new data API
-	-- if is_host then
-	if false then
-		local savedData=data.loadAll()
-		if savedData == nil then
-			for k, v in pairs(defaults) do
-				data.save(k, v)
-			end
-			savedData=data.loadAll()
-		end
-		skin_state=mergeTable(
-		map(unstring,data.loadAll()),
-		defaults)
-	else
-		skin_state=defaults
-	end
-	setLocalState()
 end
 
 function printSettings()
 	print("Settings:")
-	for k, v in pairs(skin_state) do
-		print(tostring(k)..": "..tostring(v))
-	end
+	printTable(sharedconfig.load())
 end
-if skin_state.print_settings==true then
+if sharedconfig.load("print_settings") then
 	printSettings()
-end
-
-function setState(name, state)
-	if state == nil then
-		skin_state[name]=not skin_state[name]
-	else
-		skin_state[name]=state
-	end
-	data.save(name, skin_state[name])
 end
 
 -- }}}
@@ -253,8 +187,7 @@ end
 
 
 function setArmor()
-	setState("armor_enabled")
-	syncState()
+	sharedconfig.save("armor_enabled", not sharedconfig.load("armor_enabled"))
 end
 -- }}}
 
@@ -262,7 +195,6 @@ function player_init()
 	-- for k, v in pairs(reduce(mergeTable, map(recurseModelGroup, model))) do
 	-- 	v.setEnabled(true)
 	-- end
-	setLocalState()
 	-- syncState()
 	events.ENTITY_INIT:remove("player_init")
 end
