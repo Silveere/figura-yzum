@@ -193,6 +193,7 @@ function player_init()
 	-- end
 	-- syncState()
 	events.ENTITY_INIT:remove("player_init")
+	PartsManager.refreshAll()
 end
 
 events.ENTITY_INIT:register(function() return player_init() end, "player_init")
