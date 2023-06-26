@@ -3,12 +3,6 @@
 --- Initial definitions ---
 -- rewrite compat
 model=models.player_model
-armor_model={
-	["BOOTS"]=vanilla_model.BOOTS,
-	["LEGGINGS"]=vanilla_model.LEGGINGS,
-	["CHESTPLATE"]=vanilla_model.CHESTPLATE,
-	["HELMET"]=vanilla_model.HELMET
-}
 ping=pings
 
 -- Texture dimensions --
@@ -27,13 +21,14 @@ sharedconfig=require("nulllib.sharedconfig")
 wave=nmath.wave
 lerp=math.lerp
 
--- Master and local state variables -- {{{
+-- Master config -- {{{
 -- Local State (these are copied by pings at runtime) --
+---@deprecated use sharedstate or sharedconfig
 local_state={}
+---@deprecated use sharedstate or sharedconfig
 old_state={}
 -- master state variables and configuration (do not access within pings) --
 do
-	local is_host=host:isHost()
 	local defaults={
 		["armor_enabled"]=true,
 		["vanilla_enabled"]=false,
@@ -41,6 +36,8 @@ do
 		["print_settings"]=false,
 		["tail_enabled"]=true,
 	}
+
+	sharedconfig.load_defaults(defaults)
 end
 
 function printSettings()
@@ -56,20 +53,19 @@ end
 -- Part groups {{{
 VANILLA_GROUPS={
 	["HEAD"]={vanilla_model.HEAD, vanilla_model.HAT},
-	["TORSO"]={vanilla_model.TORSO, vanilla_model.JACKET},
+	["TORSO"]={vanilla_model.BODY, vanilla_model.JACKET},
 	["LEFT_ARM"]={vanilla_model.LEFT_ARM, vanilla_model.LEFT_SLEEVE},
 	["RIGHT_ARM"]={vanilla_model.RIGHT_ARM, vanilla_model.RIGHT_SLEEVE},
-	["LEFT_LEG"]={vanilla_model.LEFT_LEG, vanilla_model.LEFT_PANTS_LEG},
-	["RIGHT_LEG"]={vanilla_model.RIGHT_LEG, vanilla_model.RIGHT_PANTS_LEG},
-	["OUTER"]={ vanilla_model.HAT, vanilla_model.JACKET, vanilla_model.LEFT_SLEEVE, vanilla_model.RIGHT_SLEEVE, vanilla_model.LEFT_PANTS_LEG, vanilla_model.RIGHT_PANTS_LEG },
-	["INNER"]={ vanilla_model.HEAD, vanilla_model.TORSO, vanilla_model.LEFT_ARM, vanilla_model.RIGHT_ARM, vanilla_model.LEFT_LEG, vanilla_model.RIGHT_LEG },
+	["LEFT_LEG"]={vanilla_model.LEFT_LEG, vanilla_model.LEFT_PANTS},
+	["RIGHT_LEG"]={vanilla_model.RIGHT_LEG, vanilla_model.RIGHT_PANTS},
+	["OUTER"]={ vanilla_model.HAT, vanilla_model.JACKET, vanilla_model.LEFT_SLEEVE, vanilla_model.RIGHT_SLEEVE, vanilla_model.LEFT_PANTS, vanilla_model.RIGHT_PANTS },
+	["INNER"]={ vanilla_model.HEAD, vanilla_model.BODY, vanilla_model.LEFT_ARM, vanilla_model.RIGHT_ARM, vanilla_model.LEFT_LEG, vanilla_model.RIGHT_LEG },
 	["ALL"]={},
-	["ARMOR"]={}
+	["ARMOR"]={vanilla_model.HELMET, vanilla_model.LEGGINGS, vanilla_model.BOOTS, vanilla_model.CHESTPLATE}
 }
 
 for _, v in pairs(VANILLA_GROUPS.INNER) do table.insert(VANILLA_GROUPS.ALL,v) end
 for _, v in pairs(VANILLA_GROUPS.OUTER) do table.insert(VANILLA_GROUPS.ALL,v) end
-for _, v in pairs(armor_model) do table.insert(VANILLA_GROUPS.ARMOR, v) end
 
 MAIN_GROUPS={model.Head, model.RightArm, model.LeftArm, model.RightLeg, model.LeftLeg, model.Body } -- RightArm LeftArm RightLeg LeftLeg Body Head
 TAIL_BONES={model.Body_Tail, model.Body_Tail.Tail2, model.Body_Tail.Tail2.Tail3, model.Body_Tail.Tail2.Tail3.Tail4}
@@ -142,11 +138,11 @@ TAIL_ROT={vec( 37.5, 0, 0 ), vec( -17.5, 0, 0 ), vec( -17.5, 0, 0 ), vec( -15, 0
 do
 	local can_modify_vanilla=avatar:canEditVanillaModel()
 	local function forceVanilla()
-		return not can_modify_vanilla or local_state.vanilla_enabled
+		return not can_modify_vanilla or sharedconfig.load("vanilla_enabled")
 	end
 
 	local function vanillaPartial()
-		return not local_state.vanilla_enabled and local_state.vanilla_partial
+		return not sharedconfig.load("vanilla_enabled") and sharedconfig.load("vanilla_partial")
 	end
 
 
@@ -155,23 +151,23 @@ do
 	local vanilla_partial_disabled=MAIN_GROUPS
 
 	-- Vanilla state
-	PM.addPartGroupFunction(VANILLA_GROUPS.ALL, function() return false end)
-	PM.addPartGroupFunction(VANILLA_GROUPS.ALL, function(last) return last or forceVanilla() end)
+	PM.addPartListFunction(VANILLA_GROUPS.ALL, function() return false end)
+	PM.addPartListFunction(VANILLA_GROUPS.ALL, function(last) return last or forceVanilla() end)
 
-	PM.addPartGroupFunction(VANILLA_GROUPS.ALL, function(last) return last or vanillaPartial() end)
+	PM.addPartListFunction(VANILLA_GROUPS.ALL, function(last) return last or vanillaPartial() end)
 
 	-- disable cape if tail enabled
-	PM.addPartFunction(vanilla_model.CAPE, function(last) return last and not local_state.tail_enabled end)
+	PM.addPartFunction(vanilla_model.CAPE, function(last) return last and not sharedconfig.load("tail_enabled") end)
 
 	-- Custom state
-	PM.addPartGroupFunction(vanilla_partial_disabled, function(last) return last and not vanillaPartial() end)
-	PM.addPartGroupFunction(MAIN_GROUPS, function(last) return last and not forceVanilla() end)
+	PM.addPartListFunction(vanilla_partial_disabled, function(last) return last and not vanillaPartial() end)
+	PM.addPartListFunction(MAIN_GROUPS, function(last) return last and not forceVanilla() end)
 
 	-- enable tail
-	PM.addPartFunction(model.Body_Tail, function(last) return last and local_state.tail_enabled end)
+	PM.addPartFunction(model.Body_Tail, function(last) return last and sharedconfig.load("tail_enabled") end)
 
 	-- Armor state
-	PM.addPartGroupFunction(VANILLA_GROUPS.ARMOR, function(last) return last and local_state.armor_enabled end)
+	PM.addPartListFunction(VANILLA_GROUPS.ARMOR, function(last) return last and sharedconfig.load("armor_enabled") end)
 
 
 end
