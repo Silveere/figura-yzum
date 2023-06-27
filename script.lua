@@ -29,6 +29,13 @@ local_state={}
 old_state={}
 -- master state variables and configuration (do not access within pings) --
 do
+	local function refresh_armor()
+		if player:isLoaded() then PartsManager.refreshPartList(VANILLA_GROUPS.ARMOR) end
+	end
+	local function refresh_tail()
+		if player:isLoaded() then PartsManager.refreshPart(model.Body_Tail) end
+	end
+
 	local defaults={
 		["armor_enabled"]=true,
 		["vanilla_enabled"]=false,
@@ -36,8 +43,12 @@ do
 		["print_settings"]=false,
 		["tail_enabled"]=true,
 	}
+	local callbacks={
+		["armor_enabled"]=refresh_armor,
+		["tail_enabled"]=refresh_tail
+	}
 
-	sharedconfig.load_defaults(defaults)
+	sharedconfig.load_defaults(defaults, callbacks)
 end
 
 function printSettings()
